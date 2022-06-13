@@ -5,10 +5,14 @@ import Auth from "./components/Auth";
 import Layout from "./components/Layout";
 import Notification from "./components/Notification";
 import { uiActions } from "./store/ui-slice";
+import { fetchData, sendCartData } from './store/cart-actions'
 
+let isFirstRender = true;
 function App() {
 
   const dispatch = useDispatch();
+
+  const notification = useSelector(state => state.ui.notification);
 
   const cart = useSelector((state) => state.cart);
   const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
@@ -16,27 +20,28 @@ function App() {
   const cartItems = useSelector((state) => state.cart.itemLists);
   console.log(cartItems);
 
-  useEffect(() => {
-    const sendRequest = async () => {
-      dispatch(uiActions.showNotification({
-        open: 
-      }))
+useEffect(() => {
+  dispatch(fetchData())
+}, [dispatch])
 
-      const res = await fetch(
-        "https://redux-tut-461bf-default-rtdb.firebaseio.com/cartItems.json",
-        {
-          method: "PUT",
-          body: JSON.stringify(cart),
-        }
-      );
-      const data = await res.json()
-    };
-    sendRequest();
+  
+  useEffect(() => {
+
+    if (isFirstRender) {
+      isFirstRender = false;
+      return;
+    }
+
+    if(cart.changed){
+      dispatch(sendCartData(cart))
+    }
+
+
   }, [cart]);
 
   return (
     <div className="App">
-      <Notification type='success' message={'This is dummy message'}/>
+     {notification && <Notification type={notification.type} message={notification.message}/>}
       {!isLoggedIn && <Auth />}
       {isLoggedIn && <Layout />}
     </div>
